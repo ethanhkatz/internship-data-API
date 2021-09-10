@@ -1,0 +1,4 @@
+# ignore data files in the following formats
+**/*.json
+**/*.csv
+**/*.txt
