@@ -75,3 +75,5 @@ requestData = []
 for request in jsonArray:
     if request["tag"] == "mystique.production.provider_event.emit_auction_summary":
         requestData.append(RoomRequest(**request))
+
+
