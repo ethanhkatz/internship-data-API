@@ -1,0 +1,22 @@
+We sell cheaper rooms from retailers and wholesalers who can't fill up their rooms. I will use data to create a model that predicts the probability that there will be rooms available so that the hotel data service won't spend too long trying to get the data from the suppliers, just to optimize the process for the consumer. David suggested I use a logistic regression model, which I think is a probability model for binary decisions.
+
+My ideas: data on covid cases and travel restrictions, population of cities. Rather than using a binary probability model, I think it would be better to use an exponential model that predicts the number of rooms available and the standard deviation, just because it would probably give more accurate results and other useful information like if the customer tries to book more than one.
+
+I shall predict the percentage of rooms that will be available, and use the number of rooms they have to predict the probability that they will have 1 room available (binomial distribution).
+
+Start coding encapsulating classes that make it easy to manipulate the data. Then, use Postgres to write database into a table. Then, write methods to encode the data into statistics. Then, use a machine learning model to predict the number of available rooms.
+
+Data I need:
+provider *
+# of rooms
+country (or a metric like population, tourism) *
+state/province *
+city (or a metric like population, tourism) *
+latitude and longitude *
+identity of hotel *
+brand of hotel *
+cancellations
+
+Covid Data?
+
+David's github username: dwebb-pf
