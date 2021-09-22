@@ -20,3 +20,8 @@ cancellations
 Covid Data?
 
 David's github username: dwebb-pf
+
+To do multiple locations, add a binary variable for each region that gives a value of 0 or 1
+
+MatLab Plot
+Pickle
