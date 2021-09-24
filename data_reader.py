@@ -82,7 +82,7 @@ class Hotel:
 class RoomRequest:
     def __init__(self, **jsonObj):
         self.kw = jsonObj
-        
+    #property
         self.rooms_found = [FoundRoom(rate) for rate in jsonObj.get("raw_rates", [])]
 
     @property
