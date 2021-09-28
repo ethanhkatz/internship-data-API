@@ -1,0 +1,8 @@
+Basic logistic regression with parameters:
+# rooms requested
+hotel latitude
+hotel longitude
+arrival day of year from 0 to 366
+number of days requested
+
+Mean Accuracy: 0.623389279913373

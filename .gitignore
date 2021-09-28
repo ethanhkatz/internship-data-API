@@ -1,4 +1,6 @@
 # ignore data files in the following formats
+__pycache__/
 **/*.json
 **/*.csv
 **/*.txt
+**/*.dump

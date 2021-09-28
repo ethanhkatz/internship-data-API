@@ -117,7 +117,7 @@ class RoomRequest:
 
 def load_request_data():
     requestData = []
-    with open("examples.json", 'r') as f:
+    with open("hsp_queue.dump", 'r') as f:
         for line in f.readlines():
             jsonObject = json.loads(line)
             if jsonObject["tag"] == "mystique.production.provider_event.emit_auction_summary":
