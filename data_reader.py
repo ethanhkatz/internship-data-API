@@ -1,5 +1,5 @@
 import json
-import time
+from datetime import datetime, date
 
 class RequestedRoom:
     def __init__(self, room):
@@ -97,13 +97,17 @@ class RoomRequest:
     def hotel_info(self):
         return Hotel(self.kw.get("compact_hotel_info", {}))
 
+    def get_date(self, key):
+        return datetime.strptime(self.kw.get(key, ''), "%Y-%m-%d").date()
+    
     @property
     def arrival_day(self):
-        return time.strptime(self.kw.get("arrival", ''), "%Y-%m-%d").tm_yday #day of the year [1, 366]
+        arrival = self.get_date("arrival")
+        return arrival.toordinal() - date(arrival.year, 1, 1).toordinal() + 1 #day of the year [1, 366]
 
     @property
     def num_days(self):
-        return (time.strptime(self.kw.get("departure", ''), "%Y-%m-%d").tm_yday - self.arrival_day) % 366
+        return self.get_date("departure").toordinal() - self.get_date("arrival").toordinal()
 
     @property
     def model_parameters_list(self):

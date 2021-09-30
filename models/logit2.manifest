@@ -1,0 +1,2 @@
+Same as logit1 but only trained with requests for hotels in the US.
+Mean Accuracy: 0.640754535624174
