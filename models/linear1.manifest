@@ -1,0 +1,8 @@
+Basic linear regression on the number of rooms available with parameters:
+# rooms requested
+hotel latitude
+hotel longitude
+arrival day of year from 0 to 366
+number of days requested
+
+Score on training data: 0.011711 (coefficient of determination)

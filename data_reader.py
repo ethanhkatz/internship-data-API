@@ -78,6 +78,9 @@ class Hotel:
     def display(self):
         print("chain: %s\nname: %s\nid: %s\ncity: %s\tstate_province: %s\tcountry: %s\nlatitude:\t%6.2f\nlongitude:\t%6.2f" % (self.chain, self.name, self.id, self.city, self.state_province, self.country, self.latitude, self.longitude))
 
+with open("states_enum.json", 'r') as f:
+    states_enum = json.loads(f.read())
+
 #class only intended for those with tag emit_auction_summary
 class RoomRequest:
     def __init__(self, **jsonObj):
@@ -110,14 +113,17 @@ class RoomRequest:
         return self.get_date("departure").toordinal() - self.get_date("arrival").toordinal()
 
     @property
+    def states_sublist(self):
+        state_num = states_enum[self.hotel_info.state_province]
+        return [0] * state_num + [1] + [0] * (56 - state_num)
+
+    @property
     def model_parameters_list(self):
         return [
             len(self.rooms_requested),
-            self.hotel_info.latitude,
-            self.hotel_info.longitude,
             self.arrival_day,
-            self.num_days ]
-
+            self.num_days ] + \
+            self.states_sublist
 
 def load_request_data():
     requestData = []
