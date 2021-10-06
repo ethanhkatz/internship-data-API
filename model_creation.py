@@ -5,7 +5,7 @@ import data_reader
 requestData = data_reader.load_request_data()
 
 def filter_conditions(request):
-    return request.hotel_info.country == "US"
+    return request.hotel_info.country.lower() == "us" or request.hotel_info.country.lower() == "united states"
 
 parameterMatrix = [request.model_parameters_list for request in requestData if filter_conditions(request)]
 resultVector = [len(request.rooms_found) > 0 and 1 or 0 for request in requestData if filter_conditions(request)]

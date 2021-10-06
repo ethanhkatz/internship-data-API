@@ -45,35 +45,35 @@ class Hotel:
     
     @property
     def chain(self):
-        return self.kw.get("parent_chain_name")
+        return self.kw.get("parent_chain_name", '')
 
     @property
     def name(self):
-        return self.kw.get("name")
+        return self.kw.get("name", '')
 
     @property
     def id(self):
-        return self.kw.get("display_id")
+        return self.kw.get("display_id", '')
 
     @property
     def country(self):
-        return self.kw.get("country")
+        return self.kw.get("country", '')
 
     @property
     def state_province(self):
-        return self.kw.get("state_province")
+        return self.kw.get("state_province", '')
 
     @property
     def city(self):
-        return self.kw.get("city")
+        return self.kw.get("city", '')
 
     @property
     def latitude(self):
-        return self.kw.get("latitude")
+        return self.kw.get("latitude", 0)
 
     @property
     def longitude(self):
-        return self.kw.get("longitude")
+        return self.kw.get("longitude", 0)
     
     def display(self):
         print("chain: %s\nname: %s\nid: %s\ncity: %s\tstate_province: %s\tcountry: %s\nlatitude:\t%6.2f\nlongitude:\t%6.2f" % (self.chain, self.name, self.id, self.city, self.state_province, self.country, self.latitude, self.longitude))
@@ -114,8 +114,8 @@ class RoomRequest:
 
     @property
     def states_sublist(self):
-        state_num = states_enum[self.hotel_info.state_province]
-        return [0] * state_num + [1] + [0] * (56 - state_num)
+        state_num = states_enum.get(self.hotel_info.state_province)
+        return state_num != None and [0] * state_num + [1] + [0] * (56 - state_num) or [0] * 57
 
     @property
     def model_parameters_list(self):
