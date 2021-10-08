@@ -115,7 +115,7 @@ class RoomRequest:
     @property
     def states_sublist(self):
         state_num = states_enum.get(self.hotel_info.state_province)
-        return state_num != None and [0] * state_num + [1] + [0] * (56 - state_num) or [0] * 57
+        return state_num != None and ([0] * state_num + [1] + [0] * (56 - state_num)) or [0] * 57
 
     @property
     def model_parameters_list(self):

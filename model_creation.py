@@ -20,3 +20,12 @@ with open("models/latest_model.manifest", 'w') as file:
     score = model.score(parameterMatrix, resultVector)
     print("Score on training data:", score)
     file.write("Score on training data: %f" % score)
+
+#states to remove: ['Alaska', 'Delaware', 'Idaho', 'Montana', 'North Dakota', 'Rhode Island', 'South Dakota', 'West Virginia', 'Wyoming', 'District of Columbia']
+#to count number of each state in data
+#for i in range(0, 51):
+#	count = 0
+#	for sample in parameterMatrix:
+#		if sample[3+i]:
+#			count += 1
+#	print(count)
