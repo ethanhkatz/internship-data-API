@@ -11,7 +11,10 @@ def filter_conditions(request):
 parameterMatrix = [request.model_parameters_list for request in requestData if filter_conditions(request)]
 resultVector = [len(request.rooms_found) > 0 and 1 or 0 for request in requestData if filter_conditions(request)]
 
-if significance_test.binary_test([s[0] for s in parameterMatrix], resultVector):
+p_value = significance_test.binary_test([s[3] for s in parameterMatrix], resultVector)
+print("p-value:", p_value)
+if p_value < 0.05:
+    print("Training model ...")
     model = LogisticRegression().fit(parameterMatrix, resultVector)
     
     with open("models/latest_model.pickle", 'wb') as file:
