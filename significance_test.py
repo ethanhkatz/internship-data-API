@@ -12,16 +12,20 @@ def counts(target, parameters, results):
         if target == -1 or sample == target:
             x += results[i]
             n += 1
-    #large counts condition
-    assert x >= 10 and n-x >= 10
-    return (n, x/n)
+    return (n, x)
 
 def binary_test(parameters, results):
     #two-tailed two-proportion p test for difference in proportions
-    (n0, p0) = counts(0, parameters, results)
-    (n1, p1) = counts(1, parameters, results)
-    total_prop = counts(-1, parameters, results)[1]
-    
-    r_se = np.sqrt(1/(total_prop*(1-total_prop)) * (n0*n1/(n0+n1)))
-    z = (p1-p0)*r_se
+    (n0, x0) = counts(0, parameters, results)
+    (n1, x1) = counts(1, parameters, results)
+    (nt, xt) = counts(-1, parameters, results)
+    #large counts condition
+    lcc = lambda n, x: x <= 10 or n-x <= 10
+    if lcc(n0, x0) or lcc(n1, x1):
+        return -1
+
+    #reciprocal of standard error
+    r_se = np.sqrt(n0*n1*nt/(xt*(nt-xt)))
+    #z-score
+    z = (x1/n1-x0/n0)*r_se
     return 2 * dist.norm.cdf(-abs(z))
