@@ -1,5 +1,6 @@
 import warnings
 from sklearn.linear_model import LogisticRegression
+from sklearn import preprocessing
 import pickle
 import json
 import data_reader
@@ -37,21 +38,18 @@ def update_model():
     
     if p_value < 0.05:
         print("Training model ...")
-        try:
-            model = LogisticRegression().fit(parameterMatrix, resultVector)
-        except:
-            p_value = -1
-            print("Traning model failed.")
-        else:
-            with open("models/parameter_"+str(column)+".pickle", 'wb') as file:
-                pickle.dump(model, file)
-                print("Model pickled in \"models/parameter_"+str(column)+".pickle\".")
-            
-            with open("models/parameter_"+str(column)+".manifest", 'w') as file:
-                score = model.score(parameterMatrix, resultVector)
-                print("Score on training data:", score)
-                file.write("Model using every parameter in columns "+str(column)+" and under. The p-value for column "+str(column)+" was "+str(p_value)+"."\
-    +"\nScore on training data: %f" % score)
+        scaler = preprocessing.StandardScaler().fit(parameterMatrix)
+        model = LogisticRegression().fit(scaler.transform(parameterMatrix), resultVector)
+        
+        with open("models/parameter_"+str(column)+".pickle", 'wb') as file:
+            pickle.dump(model, file)
+            print("Model pickled in \"models/parameter_"+str(column)+".pickle\".")
+        
+        with open("models/parameter_"+str(column)+".manifest", 'w') as file:
+            score = model.score(parameterMatrix, resultVector)
+            print("Score on training data:", score)
+            file.write("Model using every parameter in columns "+str(column)+" and under. The p-value for column "+str(column)+" was "+str(p_value)+"."\
++"\nScore on training data: %f" % score)
     
     tested_parameters.update({column: p_value})
     with open("tested_parameters.json", 'w') as outfile:
