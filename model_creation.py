@@ -23,8 +23,11 @@ def significant_parameters(request, tested_parameters, column):
     return [parameter for i, parameter in enumerate(request.model_parameters_list) if significant(i)]
 
 def update_model():
-    with open("tested_parameters.json", 'r') as infile:
-        tested_parameters = {int(key): value for key, value in json.load(infile).items()}
+    try:
+        with open("tested_parameters.json", 'r') as infile:
+            tested_parameters = {int(key): value for key, value in json.load(infile).items()}
+    except:
+        tested_parameters = {}
     
     column = get_next_column(tested_parameters)
     print("Testing column "+str(column)+" ...")
