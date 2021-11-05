@@ -42,14 +42,15 @@ def update_model():
     if p_value < 0.05:
         print("Training model ...")
         scaler = preprocessing.StandardScaler().fit(parameterMatrix)
-        model = LogisticRegression().fit(scaler.transform(parameterMatrix), resultVector)
+        normalizedMatrix = scaler.transform(parameterMatrix)
+        model = LogisticRegression().fit(normalizedMatrix, resultVector)
         
         with open("models/parameter_"+str(column)+".pickle", 'wb') as file:
             pickle.dump(model, file)
             print("Model pickled in \"models/parameter_"+str(column)+".pickle\".")
         
         with open("models/parameter_"+str(column)+".manifest", 'w') as file:
-            score = model.score(parameterMatrix, resultVector)
+            score = model.score(normalizedMatrix, resultVector)
             print("Score on training data:", score)
             file.write("Model using every parameter in columns "+str(column)+" and under. The p-value for column "+str(column)+" was "+str(p_value)+"."\
 +"\nScore on training data: %f" % score)
