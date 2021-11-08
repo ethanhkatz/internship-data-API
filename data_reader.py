@@ -104,9 +104,9 @@ class RoomRequest:
         return datetime.strptime(self.kw.get(key, ''), "%Y-%m-%d").date()
     
     @property
-    def arrival_day(self):
+    def abs_days_summer(self):
         arrival = self.get_date("arrival")
-        return arrival.toordinal() - date(arrival.year, 1, 1).toordinal() + 1 #day of the year [1, 366]
+        return abs(arrival.toordinal() - date(arrival.year, 7, 21).toordinal()) #days from summer solstice
 
     @property
     def num_days(self):
@@ -118,10 +118,14 @@ class RoomRequest:
         return state_num != None and ([0] * state_num + [1] + [0] * (40 - state_num)) or [0] * 41
 
     @property
+    def brands_sublist(self):
+        return None
+
+    @property
     def model_parameters_list(self):
         return [
             len(self.rooms_requested),
-            self.arrival_day,
+            self.abs_days_summer,
             self.num_days ] + \
             self.states_sublist
 
@@ -136,3 +140,17 @@ def load_request_data():
                 requestData.append(RoomRequest(**jsonObject))
     
     return requestData
+
+def enumerate_providers():
+    requestData = load_request_data()
+    providers_enum = {}
+    i = 0
+    for request in requestData:
+        provider_names = [room.provider.lower() for room in request.rooms_found]
+        for name in provider_names:
+            if name not in providers_enum:
+                providers_enum[name] = i
+                i += 1
+    
+    with open("providers_enum.json", 'w') as file:
+        json.dump(providers_enum, file)
