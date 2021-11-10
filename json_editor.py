@@ -66,14 +66,24 @@ def update_keys(keys):
         keys.remove(key)
         keys.remove(us_state_to_abbrev[key])
 
-with open("states_enum.json", 'r') as infile:
-    old = json.load(infile)
+def remove_states():
+    with open("states_enum.json", 'r') as infile:
+        old = json.load(infile)
 
-keys = list(old.keys())
-update_keys(keys)
-#enumerate only the abbreviations first
-states_enum = {key: index for index, key in enumerate(keys) if key not in us_state_to_abbrev.keys()}
-states_enum.update({state: states_enum.get(us_state_to_abbrev[state]) for state in us_state_to_abbrev.keys() if states_enum.get(us_state_to_abbrev[state]) != None})
+    keys = list(old.keys())
+    update_keys(keys)
+    #enumerate only the abbreviations first
+    states_enum = {key: index for index, key in enumerate(keys) if key not in us_state_to_abbrev.keys()}
+    states_enum.update({state: states_enum.get(us_state_to_abbrev[state]) for state in us_state_to_abbrev.keys() if states_enum.get(us_state_to_abbrev[state]) != None})
 
-with open("states_enum.json", 'w') as outfile:
-    json.dump(states_enum, outfile)
+    with open("states_enum.json", 'w') as outfile:
+        json.dump(states_enum, outfile)
+
+def invert_order():
+    with open("providers_enum.json", 'r') as infile:
+        old = json.load(infile)
+
+    new = {index: key for key, index in old.items()}
+
+    with open("providers_enum.json", 'w') as outfile:
+        json.dump(new, outfile)

@@ -78,9 +78,6 @@ class Hotel:
     def display(self):
         print("chain: %s\nname: %s\nid: %s\ncity: %s\tstate_province: %s\tcountry: %s\nlatitude:\t%6.2f\nlongitude:\t%6.2f" % (self.chain, self.name, self.id, self.city, self.state_province, self.country, self.latitude, self.longitude))
 
-with open("states_enum.json", 'r') as f:
-    states_enum = json.loads(f.read())
-
 #class only intended for those with tag emit_auction_summary
 class RoomRequest:
     def __init__(self, **jsonObj):
@@ -115,11 +112,17 @@ class RoomRequest:
     @property
     def states_sublist(self):
         state_num = states_enum.get(self.hotel_info.state_province)
-        return state_num != None and ([0] * state_num + [1] + [0] * (40 - state_num)) or [0] * 41
+        return state_num != None and ([0] * state_num + [1] + [0] * (num_states - 1 - state_num)) or [0] * num_states
 
     @property
-    def brands_sublist(self):
-        return None
+    def providers_sublist(self):
+        #iterating over rooms for efficiency
+        num_rooms_available = [0] * num_providers
+        for room in self.rooms_found:
+            provider_id = providers_enum.get(room.provider.lower())
+            if provider_id != None:
+                num_rooms_available[provider_id] += 1
+        return num_rooms_available
 
     @property
     def model_parameters_list(self):
@@ -127,9 +130,21 @@ class RoomRequest:
             len(self.rooms_requested),
             self.abs_days_summer,
             self.num_days ] + \
-            self.states_sublist
+            self.states_sublist + \
+            self.providers_sublist
 
-num_parameters = 44
+
+num_misc_parameters = 3
+num_states = 41
+num_providers = 12
+
+num_parameters = num_misc_parameters + num_states + num_providers
+
+with open("states_enum.json", 'r') as f:
+    states_enum = json.loads(f.read())
+
+with open("providers_enum.json", 'r') as f:
+    providers_enum = json.loads(f.read())
 
 def load_request_data():
     requestData = []

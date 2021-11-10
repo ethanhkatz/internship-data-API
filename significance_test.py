@@ -22,6 +22,7 @@ def binary_test(parameters, results):
     #large counts condition
     lcc = lambda n, x: x <= 10 or n-x <= 10
     if lcc(n0, x0) or lcc(n1, x1):
+        print("Large counts condition failed. Counts: %i/%i and %i/%i." % (x0, n0, x1, n1))
         return -1
 
     #reciprocal of standard error

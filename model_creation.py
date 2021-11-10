@@ -57,7 +57,7 @@ def update_model():
         p_value = significance_test.binary_test([r[-1] for r in parameterMatrix], resultVector)
         print("p-value:", p_value)
     
-    if not test_mode or p_value < 0.05:
+    if not test_mode or p_value < 0.05 and p_value != -1:
         print("Training model ...")
         (model, score) = train_model(parameterMatrix, resultVector)
         
@@ -75,5 +75,5 @@ def update_model():
 
     return column
 
-#while update_model() < data_reader.num_parameters-1:
-#    print()
+while update_model() < data_reader.num_parameters-1:
+    print()
