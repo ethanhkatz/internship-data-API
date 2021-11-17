@@ -45,7 +45,7 @@ class Hotel:
     
     @property
     def chain(self):
-        return self.kw.get("parent_chain_name", '')
+        return self.kw.get("parent_chain_name") or ''
 
     @property
     def name(self):
@@ -77,6 +77,10 @@ class Hotel:
     
     def display(self):
         print("chain: %s\nname: %s\nid: %s\ncity: %s\tstate_province: %s\tcountry: %s\nlatitude:\t%6.2f\nlongitude:\t%6.2f" % (self.chain, self.name, self.id, self.city, self.state_province, self.country, self.latitude, self.longitude))
+
+def parameter_list_from_enum(key, enum, n):
+    num = enum.get(key)
+    return num != None and ([0] * num + [1] + [0] * (n - 1 - num)) or [0] * n
 
 #class only intended for those with tag emit_auction_summary
 class RoomRequest:
@@ -111,18 +115,11 @@ class RoomRequest:
 
     @property
     def states_sublist(self):
-        state_num = states_enum.get(self.hotel_info.state_province)
-        return state_num != None and ([0] * state_num + [1] + [0] * (num_states - 1 - state_num)) or [0] * num_states
+        return parameter_list_from_enum(self.hotel_info.state_province, states_enum, num_states)
 
     @property
-    def providers_sublist(self):
-        #iterating over rooms for efficiency
-        num_rooms_available = [0] * num_providers
-        for room in self.rooms_found:
-            provider_id = providers_enum.get(room.provider.lower())
-            if provider_id != None:
-                num_rooms_available[provider_id] += 1
-        return num_rooms_available
+    def chains_sublist(self):
+        return parameter_list_from_enum(self.hotel_info.chain.lower(), chains_enum, num_chains)
 
     @property
     def model_parameters_list(self):
@@ -131,20 +128,19 @@ class RoomRequest:
             self.abs_days_summer,
             self.num_days ] + \
             self.states_sublist + \
-            self.providers_sublist
-
-
-num_misc_parameters = 3
-num_states = 41
-num_providers = 12
-
-num_parameters = num_misc_parameters + num_states + num_providers
+            self.chains_sublist
 
 with open("states_enum.json", 'r') as f:
     states_enum = json.loads(f.read())
 
-with open("providers_enum.json", 'r') as f:
-    providers_enum = json.loads(f.read())
+with open("chains_enum.json", 'r') as f:
+    chains_enum = json.loads(f.read())
+
+num_misc_parameters = 3
+num_states = 41
+num_chains = 23
+
+num_parameters = num_misc_parameters + num_states + num_chains
 
 def load_request_data():
     requestData = []
@@ -167,5 +163,25 @@ def enumerate_providers():
                 providers_enum[name] = i
                 i += 1
     
-    with open("providers_enum.json", 'w') as file:
-        json.dump(providers_enum, file)
+    with open("providers_enum.json", 'w') as outfile:
+        json.dump(providers_enum, outfile)
+
+def enumerate_chains():
+    requestData = load_request_data()
+    chains_enum = {}
+    for request in requestData:
+        chain_name = request.hotel_info.chain.lower()
+        if chain_name != '' and chain_name != "unaffiliated" and chain_name not in chains_enum:
+            chains_enum[chain_name] = 1
+        elif chain_name in chains_enum:
+            chains_enum[chain_name] += 1
+    
+    chains_list = list(chains_enum.items())
+    chains_list.sort(key = (lambda chain: chain[1]), reverse=True)
+    chains_enum = {chain[0]: (i, chain[1]) for i, chain in enumerate(chains_list)}
+    
+    with open("chains_enum_full.json", 'w') as outfile:
+        json.dump(chains_enum, outfile)
+    
+    with open("chains_enum.json", 'w') as outfile:
+        json.dump({key: value[0] for key, value in chains_enum.items() if value[1] > 10}, outfile)

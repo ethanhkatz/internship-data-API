@@ -87,3 +87,9 @@ def invert_order():
 
     with open("providers_enum.json", 'w') as outfile:
         json.dump(new, outfile)
+
+def enumerate_chains():
+    chains = ['Starwood Preferred Guest', 'Marriott', 'Wyndham Hotels', 'Best Western', 'Choice Hotels', 'Hilton', 'Motel 6', 'IHG', 'Hyatt']
+    chains_enum = {key: index for index, key in enumerate(chains)}
+    with open("suggested_chains_enum.json", 'w') as outfile:
+        json.dump(chains_enum, outfile)
