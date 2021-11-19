@@ -49,31 +49,31 @@ class Hotel:
 
     @property
     def name(self):
-        return self.kw.get("name", '')
+        return self.kw.get("name") or ''
 
     @property
     def id(self):
-        return self.kw.get("display_id", '')
+        return self.kw.get("display_id") or ''
 
     @property
     def country(self):
-        return self.kw.get("country", '')
+        return self.kw.get("country") or ''
 
     @property
     def state_province(self):
-        return self.kw.get("state_province", '')
+        return self.kw.get("state_province") or ''
 
     @property
     def city(self):
-        return self.kw.get("city", '')
+        return self.kw.get("city") or ''
 
     @property
     def latitude(self):
-        return self.kw.get("latitude", 0)
+        return self.kw.get("latitude") or 0
 
     @property
     def longitude(self):
-        return self.kw.get("longitude", 0)
+        return self.kw.get("longitude") or 0
     
     def display(self):
         print("chain: %s\nname: %s\nid: %s\ncity: %s\tstate_province: %s\tcountry: %s\nlatitude:\t%6.2f\nlongitude:\t%6.2f" % (self.chain, self.name, self.id, self.city, self.state_province, self.country, self.latitude, self.longitude))
@@ -142,9 +142,9 @@ num_chains = 23
 
 num_parameters = num_misc_parameters + num_states + num_chains
 
-def load_request_data():
+def load_request_data(filepath):
     requestData = []
-    with open("hsp_queue.dump", 'r') as f:
+    with open(filepath, 'r') as f:
         for line in f.readlines():
             jsonObject = json.loads(line)
             if jsonObject["tag"] == "mystique.production.provider_event.emit_auction_summary":
