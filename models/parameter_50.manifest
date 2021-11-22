@@ -1,2 +1,2 @@
-Model using every parameter in columns 50 and under. The p-value for column 50 was 2.2032249149090534e-05.
+Model using every significant parameter in columns 50 and under. The p-value for column 50 was 2.2032249149090534e-05.
 Score on training data: 0.690134

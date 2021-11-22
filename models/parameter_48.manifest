@@ -1,2 +1,2 @@
-Model using every parameter in columns 48 and under. The p-value for column 48 was 0.0009336687501923406.
+Model using every significant parameter in columns 48 and under. The p-value for column 48 was 0.0009336687501923406.
 Score on training data: 0.690958

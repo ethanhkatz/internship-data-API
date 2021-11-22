@@ -79,16 +79,41 @@ def loop_update_model():
     while update_model() < data_reader.num_parameters-1:
         print()
 
-def test_model(filename):
+availability_cutoff = 0.50
+
+def test_model(filename, column = -1):
     with open("models/" + filename, 'rb') as infile:
         model = pickle.load(infile)
     
     tested_parameters = get_tested_parameters()
-    column = get_next_column(tested_parameters)
+    if column == -1:
+        column = get_next_column(tested_parameters)
     (parameterMatrix, resultVector) = get_matrix(tested_parameters, column, "ethan_data_30days.json")
     scaler = preprocessing.StandardScaler().fit(parameterMatrix)
     normalizedMatrix = scaler.transform(parameterMatrix)
+
+    probabilities = model.predict_proba(normalizedMatrix)
+    counts = [0, 0, 0, 0] #[correct fail, incorrect fail, incorrect success, correct success]
+    for i, prediction in enumerate(probabilities):
+        if prediction[1] < availability_cutoff:
+            if resultVector[i] == 0:
+                counts[0] += 1
+            else:
+                counts[1] += 1
+        else:
+            if resultVector[i] == 0:
+                counts[2] += 1
+            else:
+                counts[3] += 1
     
-    score = model.score(normalizedMatrix, resultVector)
-    print("Score on testing data:", score)
-    return score
+    percents = [count/len(probabilities) for count in counts]
+    print('''\t\tobserved value
+     \t\t0   \t\t 1
+0: {4:.2%} \t{0:.2%}   \t {1:.2%}
+1: {5:.2%} \t{2:.2%}   \t {3:.2%}
+     \t\t{6:.2%}   \t {7:.2%}
+'''.format(percents[0], percents[1], percents[2], percents[3], percents[0]+percents[1], percents[2]+percents[3],\
+        percents[0]+percents[2], percents[1]+percents[3]))
+    return counts
+
+test_model("latest_model.pickle")

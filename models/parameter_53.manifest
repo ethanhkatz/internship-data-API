@@ -1,2 +1,2 @@
-Model using every parameter in columns 53 and under. The p-value for column 53 was 0.01415988958577694.
+Model using every significant parameter in columns 53 and under. The p-value for column 53 was 0.01415988958577694.
 Score on training data: 0.690487

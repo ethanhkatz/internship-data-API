@@ -1,2 +1,2 @@
-Model using every parameter in columns 46 and under. The p-value for column 46 was 3.847066138506301e-12.
+Model using every significant parameter in columns 46 and under. The p-value for column 46 was 3.847066138506301e-12.
 Score on training data: 0.678126
