@@ -1,2 +1,9 @@
 Model using every significant parameter in columns 54 and under. The p-value for column 54 was 0.005672562174505001.
 Score on training data: 0.690370
+
+With a decision cutoff of 50%:
+Predicted	Observed
+     		0   		 1
+0: 23.70% 	12.65%   	 11.06%
+1: 76.30% 	27.19%   	 49.11%
+     		39.84%   	 60.16%

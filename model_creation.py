@@ -5,9 +5,9 @@ import json
 import data_reader
 import significance_test
 
-def get_tested_parameters():
+def get_tested_parameters(filepath):
     try:
-        with open("tested_parameters.json", 'r') as infile:
+        with open(filepath, 'r') as infile:
             return {int(key): value for key, value in json.load(infile).items()}
     except:
         return {}
@@ -22,11 +22,17 @@ def significant_parameters(request, tested_parameters, column):
     significant = lambda i: i < 3 or i == column or i < column and tested_parameters[i] < 0.05 and tested_parameters[i] != -1
     return [parameter for i, parameter in enumerate(request.model_parameters_list) if significant(i)]
 
-def get_matrix(tested_parameters, column, filepath):
+def get_matrix(tested_parameters, column, filepath, provider):
     requestData = data_reader.load_request_data(filepath)
+    
     filter_conditions = lambda request: request.hotel_info.country.lower() == "us" or request.hotel_info.country.lower() == "united states"
     parameterMatrix = [significant_parameters(request, tested_parameters, column) for request in requestData if filter_conditions(request)]
-    resultVector = [len(request.rooms_found) > 0 and 1 or 0 for request in requestData if filter_conditions(request)]
+    if provider:
+        available = lambda request: provider in (room.provider.lower() for room in request.rooms_found)
+    else:
+        available = lambda request: len(request.rooms_found) > 0
+    resultVector = [available(request) and 1 or 0 for request in requestData if filter_conditions(request)]
+    
     return (parameterMatrix, resultVector)
 
 def train_model(parameterMatrix, resultVector):
@@ -37,21 +43,23 @@ def train_model(parameterMatrix, resultVector):
     print("Score on training data:", score)
     return (model, score)
 
-def save_model(model, name, manifest_message):
-    with open("models/" + name + ".pickle", 'wb') as file:
+def save_model(model, provider, name, manifest_message):
+    filepath = (provider and ("provider_models/" + provider + '/') or "models/") + name
+    with open(filepath + ".pickle", 'wb') as file:
         pickle.dump(model, file)
-        print("Model pickled in \"models/" + name + ".pickle\".")
-    with open("models/" + name + ".manifest", 'w') as file:
+        print("Model pickled in \"" + filepath + ".pickle\".")
+    with open(filepath + ".manifest", 'w') as file:
         file.write(manifest_message)
 
-def update_model():
-    tested_parameters = get_tested_parameters()
+def update_model(provider):
+    tested_parameters_path = provider and ("provider_models/" + provider + "/tested_parameters.json") or "tested_parameters.json"
+    tested_parameters = get_tested_parameters(tested_parameters_path)
     column = get_next_column(tested_parameters)
     test_mode = column < data_reader.num_parameters
     if test_mode:
-        print("Testing column "+str(column)+" ...")
+        print("Testing column " + str(column) + " for provider \"" + provider + "\" ...")
     
-    (parameterMatrix, resultVector) = get_matrix(tested_parameters, column, "hsp_queue.dump")
+    (parameterMatrix, resultVector) = get_matrix(tested_parameters, column, "hsp_queue.dump", provider)
 
     if test_mode:
         p_value = significance_test.binary_test([r[-1] for r in parameterMatrix], resultVector)
@@ -62,15 +70,15 @@ def update_model():
         (model, score) = train_model(parameterMatrix, resultVector)
         
         if test_mode:
-            save_model(model, "parameter_"+str(column), \
+            save_model(model, provider, "parameter_"+str(column), \
                 "Model using every significant parameter in columns "+str(column)+" and under. The p-value for column "+str(column)+" was "+str(p_value)+"."\
                 +"\nScore on training data: %f" % score)
         else:
-            save_model(model, "latest_model", "Score on training data: %f" % score)
+            save_model(model, provider, "latest_model", "Score on training data: %f" % score)
 
     if test_mode:
         tested_parameters.update({column: p_value})
-        with open("tested_parameters.json", 'w') as outfile:
+        with open(tested_parameters_path, 'w') as outfile:
             json.dump(tested_parameters, outfile)
 
     return column
@@ -81,8 +89,13 @@ def loop_update_model():
 
 availability_cutoff = 0.50
 
-def test_model(filename, column = -1):
-    with open("models/" + filename, 'rb') as infile:
+def test_model(name, column = -1):
+    #only test files that haven't been tested
+    with open("models/" + name + ".manifest", 'r') as infile:
+        if infile.read().find("Predicted\tObserved") != -1:
+            return None
+    
+    with open("models/" + name + ".pickle", 'rb') as infile:
         model = pickle.load(infile)
     
     tested_parameters = get_tested_parameters()
@@ -107,13 +120,18 @@ def test_model(filename, column = -1):
                 counts[3] += 1
     
     percents = [count/len(probabilities) for count in counts]
-    print('''\t\tobserved value
+    output = '''
+With a decision cutoff of {8:.0%}:
+Predicted\tObserved
      \t\t0   \t\t 1
 0: {4:.2%} \t{0:.2%}   \t {1:.2%}
 1: {5:.2%} \t{2:.2%}   \t {3:.2%}
      \t\t{6:.2%}   \t {7:.2%}
 '''.format(percents[0], percents[1], percents[2], percents[3], percents[0]+percents[1], percents[2]+percents[3],\
-        percents[0]+percents[2], percents[1]+percents[3]))
+        percents[0]+percents[2], percents[1]+percents[3], availability_cutoff)
+    print(output)
+    with open("models/" + name + ".manifest", 'a') as outfile:
+        outfile.write('\n' + output)
     return counts
 
-test_model("latest_model.pickle")
+test_model("parameter_54")
