@@ -2,6 +2,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn import preprocessing
 import pickle
 import json
+import os
 import data_reader
 import significance_test
 
@@ -19,7 +20,7 @@ def get_next_column(tested_parameters):
     return next_column
 
 def significant_parameters(request, tested_parameters, column):
-    significant = lambda i: i < 3 or i == column or i < column and tested_parameters[i] < 0.05 and tested_parameters[i] != -1
+    significant = lambda i: i < 3 or i <= column and tested_parameters[i] < 0.05 and tested_parameters[i] != -1
     return [parameter for i, parameter in enumerate(request.model_parameters_list) if significant(i)]
 
 def get_matrix(tested_parameters, column, filepath, provider):
@@ -51,41 +52,49 @@ def save_model(model, provider, name, manifest_message):
     with open(filepath + ".manifest", 'w') as file:
         file.write(manifest_message)
 
-def update_model(provider):
-    tested_parameters_path = provider and ("provider_models/" + provider + "/tested_parameters.json") or "tested_parameters.json"
+def update_model(provider=None, test_mode=True):
+    tested_parameters_path = provider and test_mode and ("provider_models/" + provider + "/tested_parameters.json") or "tested_parameters.json"
     tested_parameters = get_tested_parameters(tested_parameters_path)
     column = get_next_column(tested_parameters)
-    test_mode = column < data_reader.num_parameters
-    if test_mode:
-        print("Testing column " + str(column) + " for provider \"" + provider + "\" ...")
-    
+    if test_mode and column >= data_reader.num_parameters:
+        return column
     (parameterMatrix, resultVector) = get_matrix(tested_parameters, column, "hsp_queue.dump", provider)
 
     if test_mode:
         p_value = significance_test.binary_test([r[-1] for r in parameterMatrix], resultVector)
         print("p-value:", p_value)
+        tested_parameters.update({column: p_value})
+        with open(tested_parameters_path, 'w') as outfile:
+            json.dump(tested_parameters, outfile)
     
     if not test_mode or p_value < 0.05 and p_value != -1:
         print("Training model ...")
         (model, score) = train_model(parameterMatrix, resultVector)
-        
         if test_mode:
             save_model(model, provider, "parameter_"+str(column), \
                 "Model using every significant parameter in columns "+str(column)+" and under. The p-value for column "+str(column)+" was "+str(p_value)+"."\
                 +"\nScore on training data: %f" % score)
         else:
             save_model(model, provider, "latest_model", "Score on training data: %f" % score)
-
-    if test_mode:
-        tested_parameters.update({column: p_value})
-        with open(tested_parameters_path, 'w') as outfile:
-            json.dump(tested_parameters, outfile)
-
+    
     return column
 
-def loop_update_model():
-    while update_model() < data_reader.num_parameters-1:
+def loop_update_model(provider=None):
+    while update_model(provider, True) < data_reader.num_parameters-1:
         print()
+
+def loop_update_providers(test_mode=False):
+    with open("providers_enum.json", 'r') as f:
+        providers_enum = json.loads(f.read())
+    for provider in providers_enum:
+        if not os.path.isdir("provider_models/" + provider):
+            os.mkdir("provider_models/" + provider)
+        if test_mode:
+            print("\n\nTesting parameters for provider \"" + provider + "\".\n\n")
+            loop_update_model(provider)
+        else:
+            print("\n\nTraining provider \"" + provider + "\".\n\n")
+            update_model(provider, False)
 
 availability_cutoff = 0.50
 
@@ -134,4 +143,4 @@ Predicted\tObserved
         outfile.write('\n' + output)
     return counts
 
-test_model("parameter_54")
+loop_update_providers()
