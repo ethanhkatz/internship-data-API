@@ -23,7 +23,7 @@ def significant_parameters(request, tested_parameters, column):
     significant = lambda i: i < 3 or i <= column and tested_parameters[i] < 0.05 and tested_parameters[i] != -1
     return [parameter for i, parameter in enumerate(request.model_parameters_list) if significant(i)]
 
-def get_matrix(tested_parameters, column, filepath, provider):
+def get_matrix(tested_parameters, column, filepath, provider=None):
     requestData = data_reader.load_request_data(filepath)
     
     filter_conditions = lambda request: request.hotel_info.country.lower() == "us" or request.hotel_info.country.lower() == "united states"
@@ -107,7 +107,7 @@ def test_model(name, column = -1):
     with open("models/" + name + ".pickle", 'rb') as infile:
         model = pickle.load(infile)
     
-    tested_parameters = get_tested_parameters()
+    tested_parameters = get_tested_parameters("tested_parameters.json")
     if column == -1:
         column = get_next_column(tested_parameters)
     (parameterMatrix, resultVector) = get_matrix(tested_parameters, column, "ethan_data_30days.json")
@@ -142,5 +142,3 @@ Predicted\tObserved
     with open("models/" + name + ".manifest", 'a') as outfile:
         outfile.write('\n' + output)
     return counts
-
-loop_update_providers()

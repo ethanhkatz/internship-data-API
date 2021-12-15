@@ -1,3 +1,4 @@
+import requests
 import json
 from datetime import datetime, date
 
@@ -74,6 +75,10 @@ class Hotel:
     @property
     def longitude(self):
         return self.kw.get("longitude") or 0
+
+    @property
+    def zip(self):
+        return self.kw.get("postal_code") or ''
     
     def display(self):
         print("chain: %s\nname: %s\nid: %s\ncity: %s\tstate_province: %s\tcountry: %s\nlatitude:\t%6.2f\nlongitude:\t%6.2f" % (self.chain, self.name, self.id, self.city, self.state_province, self.country, self.latitude, self.longitude))
@@ -92,6 +97,11 @@ class RoomRequest:
     @property
     def rooms_requested(self):
         return [RequestedRoom(room) for room in self.kw.get("rooms", [])]
+
+    @property
+    def num_rooms_requested(self):
+        #when processing a request I pass the number of rooms as a str in "rooms" argument, when training it's a list
+        return isinstance(self.kw.get("rooms"), str) and int(rooms) or len(self.rooms_requested)
 
     @property
     def potential_providers(self):
@@ -122,9 +132,21 @@ class RoomRequest:
         return parameter_list_from_enum(self.hotel_info.chain.lower(), chains_enum, num_chains)
 
     @property
+    def zip_income(self):
+        url = "https://api.census.gov"
+        route = "/data/2019/acs/acs5/profile"
+        params = {'get': "NAME"}
+        "?get=NAME,DP03_0062E&for=zip%20code%20tabulation%20area:84096&in=state:49&key=d287601bbb2dca6a04d540ca9187edfd23de2136"
+        
+
+    @property
+    def zip_population(self):
+        "https://api.census.gov/data/2019/acs/acs5/profile?get=NAME,DP03_0001E&for=zip%20code%20tabulation%20area:84096&in=state:49&key=d287601bbb2dca6a04d540ca9187edfd23de2136"
+
+    @property
     def model_parameters_list(self):
         return [
-            len(self.rooms_requested),
+            self.num_rooms_requested,
             self.abs_days_summer,
             self.num_days ] + \
             self.states_sublist + \
@@ -141,6 +163,8 @@ num_states = 41
 num_chains = 23
 
 num_parameters = num_misc_parameters + num_states + num_chains
+
+key = "d287601bbb2dca6a04d540ca9187edfd23de2136"
 
 def load_request_data(filepath):
     requestData = []
