@@ -5,3 +5,6 @@ examples.json
 **/*.csv
 **/*.txt
 **/*.dump
+
+# don't commit virtual environment
+**/venv/**
