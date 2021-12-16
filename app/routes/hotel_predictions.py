@@ -33,16 +33,15 @@ class HotelPredictions:
         tested_parameters = model_creation.get_tested_parameters("tested_parameters.json")
         column = model_creation.get_next_column(tested_parameters)
         parameters = model_creation.significant_parameters(self.room_request, tested_parameters, column)
-        
+
         return {"likelihood": model.predict_proba(parameters)}
 
     def __call__(self):
-        self.validate_arguments_exist(self)
-        self.validate_request_arguments(self)
-        
-        return self.response
+        self.validate_arguments_exist()
+        self.validate_request_arguments()
 
+        return self.response
 
 @app.route("/hotel_predictions", methods=["GET"])
 def hotel_predictions():
-    return HotelPredictions()
+    return HotelPredictions()(), 200

@@ -1,0 +1,5 @@
+waitress
+Flask==2.0.1
+Flask-API==3.0.post1
+sklearn
+requests==2.26.0

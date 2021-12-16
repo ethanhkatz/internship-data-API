@@ -5,3 +5,6 @@ __pycache__/
 **/*.csv
 **/*.txt
 **/*.dump
+
+# don't commit virtual environment
+**/venv/**
