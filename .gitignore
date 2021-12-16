@@ -1,7 +1,7 @@
 # ignore data files in the following formats
 __pycache__/
-**/*.json
-!states_enum.json
+ethan_data_30days.json
+examples.json
 **/*.csv
 **/*.txt
 **/*.dump
