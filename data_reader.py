@@ -101,7 +101,8 @@ class RoomRequest:
     @property
     def num_rooms_requested(self):
         #when processing a request I pass the number of rooms as a str in "rooms" argument, when training it's a list
-        return isinstance(self.kw.get("rooms"), str) and int(rooms) or len(self.rooms_requested)
+        rooms = self.kw.get("rooms")
+        return isinstance(rooms, str) and int(rooms) or len(self.rooms_requested)
 
     @property
     def potential_providers(self):
@@ -177,21 +178,25 @@ def load_request_data(filepath):
     return requestData
 
 def enumerate_providers():
-    requestData = load_request_data()
+    requestData = load_request_data("hsp_queue.dump")
     providers_enum = {}
     i = 0
     for request in requestData:
         provider_names = [room.provider.lower() for room in request.rooms_found]
         for name in provider_names:
             if name not in providers_enum:
-                providers_enum[name] = i
-                i += 1
+                providers_enum[name] = 1
+            elif name in providers_enum:
+                providers_enum[name] += 1
     
-    with open("providers_enum.json", 'w') as outfile:
+    providers_list = list(providers_enum.items())
+    providers_list.sort(key = (lambda provider: provider[1]), reverse=True)
+    providers_enum = {provider[0]: (i, provider[1]) for i, provider in enumerate(providers_list)}
+    with open("provider_enum_full.json", 'w') as outfile:
         json.dump(providers_enum, outfile)
 
 def enumerate_chains():
-    requestData = load_request_data()
+    requestData = load_request_data("hsp_queue.dump")
     chains_enum = {}
     for request in requestData:
         chain_name = request.hotel_info.chain.lower()

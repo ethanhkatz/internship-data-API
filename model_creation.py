@@ -42,15 +42,17 @@ def train_model(parameterMatrix, resultVector):
     model = LogisticRegression().fit(normalizedMatrix, resultVector)
     score = model.score(normalizedMatrix, resultVector)
     print("Score on training data:", score)
-    return (model, score)
+    return (model, score, scaler)
 
-def save_model(model, provider, name, manifest_message):
+def save_model(model, scaler, provider, name, manifest_message):
     filepath = (provider and ("provider_models/" + provider + '/') or "models/") + name
     with open(filepath + ".pickle", 'wb') as file:
         pickle.dump(model, file)
         print("Model pickled in \"" + filepath + ".pickle\".")
     with open(filepath + ".manifest", 'w') as file:
         file.write(manifest_message)
+    with open(filepath + "_scaler.pickle", 'wb') as file:
+        pickle.dump(scaler, file)
 
 def update_model(provider=None, test_mode=True):
     tested_parameters_path = provider and test_mode and ("provider_models/" + provider + "/tested_parameters.json") or "tested_parameters.json"
@@ -69,13 +71,13 @@ def update_model(provider=None, test_mode=True):
     
     if not test_mode or p_value < 0.05 and p_value != -1:
         print("Training model ...")
-        (model, score) = train_model(parameterMatrix, resultVector)
+        (model, score, scaler) = train_model(parameterMatrix, resultVector)
         if test_mode:
-            save_model(model, provider, "parameter_"+str(column), \
+            save_model(model, scaler, provider, "parameter_"+str(column), \
                 "Model using every significant parameter in columns "+str(column)+" and under. The p-value for column "+str(column)+" was "+str(p_value)+"."\
                 +"\nScore on training data: %f" % score)
         else:
-            save_model(model, provider, "latest_model", "Score on training data: %f" % score)
+            save_model(model, scaler, provider, "latest_model", "Score on training data: %f" % score)
     
     return column
 
@@ -98,19 +100,20 @@ def loop_update_providers(test_mode=False):
 
 availability_cutoff = 0.50
 
-def test_model(name, column = -1):
+def test_model(provider=None, name="latest_model", column=-1):
+    filepath = (provider and ("provider_models/" + provider + '/') or "models/") + name
     #only test files that haven't been tested
-    with open("models/" + name + ".manifest", 'r') as infile:
+    with open(filepath + ".manifest", 'r') as infile:
         if infile.read().find("Predicted\tObserved") != -1:
             return None
     
-    with open("models/" + name + ".pickle", 'rb') as infile:
+    with open(filepath + ".pickle", 'rb') as infile:
         model = pickle.load(infile)
     
     tested_parameters = get_tested_parameters("tested_parameters.json")
     if column == -1:
         column = get_next_column(tested_parameters)
-    (parameterMatrix, resultVector) = get_matrix(tested_parameters, column, "ethan_data_30days.json")
+    (parameterMatrix, resultVector) = get_matrix(tested_parameters, column, "ethan_data_30days.json", provider)
     scaler = preprocessing.StandardScaler().fit(parameterMatrix)
     normalizedMatrix = scaler.transform(parameterMatrix)
 
@@ -139,6 +142,25 @@ Predicted\tObserved
 '''.format(percents[0], percents[1], percents[2], percents[3], percents[0]+percents[1], percents[2]+percents[3],\
         percents[0]+percents[2], percents[1]+percents[3], availability_cutoff)
     print(output)
-    with open("models/" + name + ".manifest", 'a') as outfile:
+    with open(filepath + ".manifest", 'a') as outfile:
         outfile.write('\n' + output)
     return counts
+
+def loop_test_providers():
+    with open("providers_enum.json", 'r') as f:
+        providers_enum = json.loads(f.read())
+    for provider in providers_enum:
+        print("\nTesting provider " + provider + "\n")
+        test_model(provider)
+
+def save_provider_scalers():
+    #helper function because I hadn't previously saved the scalers
+    with open("providers_enum.json", 'r') as f:
+        providers_enum = json.loads(f.read())
+    tested_parameters = get_tested_parameters("tested_parameters.json")
+    column = get_next_column(tested_parameters)
+    for provider in providers_enum:
+        (parameterMatrix, resultVector) = get_matrix(tested_parameters, column, "ethan_data_30days.json", provider)
+        scaler = preprocessing.StandardScaler().fit(parameterMatrix)
+        with open("provider_models/" + provider + "/latest_model_scaler.pickle", 'wb') as file:
+            pickle.dump(scaler, file)

@@ -2,6 +2,7 @@ from flask import request
 from app import app
 
 import pickle
+import json
 import model_creation
 import data_reader
 
@@ -28,13 +29,19 @@ class HotelPredictions:
 
     @property
     def response(self):
-        with open("models/latest_model.pickle", 'rb') as infile:
-            model = pickle.load(infile)
         tested_parameters = model_creation.get_tested_parameters("tested_parameters.json")
         column = model_creation.get_next_column(tested_parameters)
         parameters = model_creation.significant_parameters(self.room_request, tested_parameters, column)
-
-        return {"likelihood": model.predict_proba(parameters)}
+        with open("providers_enum.json", 'r') as f:
+            providers_enum = json.loads(f.read())
+        provider_likelihoods = {}
+        for provider in providers_enum:
+            with open("provider_models/" + provider + "/latest_model.pickle", 'rb') as infile:
+                model = pickle.load(infile)
+            with open("provider_models/" + provider + "/latest_model_scaler.pickle", 'rb') as infile:
+                scaler = pickle.load(infile)
+            provider_likelihoods[provider] = model.predict_proba(scaler.transform([parameters]))[0][1]
+        return provider_likelihoods
 
     def __call__(self):
         self.validate_arguments_exist()

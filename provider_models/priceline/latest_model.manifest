@@ -1,1 +1,8 @@
 Score on training data: 0.797033
+
+With a decision cutoff of 50%:
+Predicted	Observed
+     		0   		 1
+0: 69.83% 	63.58%   	 6.26%
+1: 30.17% 	17.42%   	 12.75%
+     		81.00%   	 19.00%
